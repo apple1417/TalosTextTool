@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29411.108
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalosTextTool", "TalosTextTool.csproj", "{5AD43F4B-9B2B-4268-997B-6806847B5B78}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5AD43F4B-9B2B-4268-997B-6806847B5B78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AD43F4B-9B2B-4268-997B-6806847B5B78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AD43F4B-9B2B-4268-997B-6806847B5B78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AD43F4B-9B2B-4268-997B-6806847B5B78}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C4D98253-E5FA-4FA4-B8B2-EF701C2C5BB6}
+	EndGlobalSection
+EndGlobal
