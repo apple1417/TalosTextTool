@@ -18,6 +18,9 @@ namespace TalosTextTool {
     private static extern bool CloseHandle(IntPtr hObject);
 
     [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool IsWow64Process(IntPtr hProcess, ref bool Wow64Process);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr OpenProcess(Int32 dwDesiredAccess, bool bInheritHandle, Int32 dwProcessId);
 
     [DllImport("kernel32.dll", SetLastError = true)]
@@ -37,6 +40,17 @@ namespace TalosTextTool {
           _isHooked = false;
         }
         return _isHooked;
+      }
+    }
+
+    public bool Is64Bit {
+      get {
+        bool is32Bit = false;
+        bool result = IsWow64Process(handle, ref is32Bit);
+        if (!result) {
+          throw new Win32Exception(Marshal.GetLastWin32Error());
+        }
+        return !is32Bit;
       }
     }
 

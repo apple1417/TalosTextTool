@@ -5,22 +5,30 @@ namespace TalosTextTool {
   class AddressFinder {
     public bool FoundAddresses { get; private set; }
 
-    public IntPtr SkipJump { get; private set; } // The address of the jump that skips drawing the text, right after comparing against the cvar
-    public IntPtr DrawCall { get; private set; } // The address of the call to the function that draws the text.
+    public IntPtr CvarCheck { get; private set; } // The address of the jump that skips the show level block, right after comparing against the cvar.
+    public IntPtr DrawTextCall { get; private set; } // The address of the call to the function that draws the text, which we're overwriting.
+    public IntPtr DrawBox { get; private set; } // The address of the function that draws the background of the cheats box.
+    public IntPtr Viewport { get; private set; } // The address containing the viewport to draw to.
 
-    private const int CMP_JUMP_OFFSET_244 = 0x00641AF3;
-    private const int DRAW_CALL_OFFSET_244 = 0x00641B76;
+    private const int CVAR_CHECK_244 = 0x00641AF3;
+    private const int DRAW_TEXT_CALL_244 = 0x00641B76;
+    private const int DRAW_BOX_244 = 0x082FE20;
+    private const int VIEWPORT_244 = 0x011E8A20;
 
     public AddressFinder(MemoryManager manager) {
-      // TODO: Make this work with mnore than just 244
+      // TODO: Make this work with ore than just 244
       ProcessModule exe = manager.HookedProcess.MainModule;
       FoundAddresses = exe.ModuleMemorySize == 0x012b1000;
       if (!FoundAddresses) {
         return;
       }
 
-      SkipJump = IntPtr.Add(manager.HookedProcess.MainModule.BaseAddress, CMP_JUMP_OFFSET_244);
-      DrawCall = IntPtr.Add(manager.HookedProcess.MainModule.BaseAddress, DRAW_CALL_OFFSET_244);
+      ProcessModule main = manager.HookedProcess.MainModule;
+
+      CvarCheck = IntPtr.Add(main.BaseAddress, CVAR_CHECK_244);
+      DrawTextCall = IntPtr.Add(main.BaseAddress, DRAW_TEXT_CALL_244);
+      DrawBox = IntPtr.Add(main.BaseAddress, DRAW_BOX_244);
+      Viewport = IntPtr.Add(main.BaseAddress, VIEWPORT_244);
     }
   }
 }
