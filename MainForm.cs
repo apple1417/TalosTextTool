@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace TalosTextTool {
@@ -13,27 +12,34 @@ namespace TalosTextTool {
     public MainForm() {
       InitializeComponent();
 
-      colourDialog.Color = Color.White;
-
-      // This will be overwritten later
-      textInput.MaxLength = 256;
+      // TODO: 64 bit, min of the two max lengths
+      textInput.MaxLength = TextInjection32.MaxTextLength;
     }
 
-    private void ColourBox_Click(object sender, EventArgs e) {
+
+    private void MainForm_KeyDown(object sender, KeyEventArgs e) {
+      if (e.KeyCode == Keys.Enter) {
+        e.SuppressKeyPress = true;
+        InjectButton_Click(sender, e);
+      }
+    }
+
+    private void ColourInput_Click(object sender, EventArgs e) {
+      colourDialog.Color = colourInput.BackColor;
       colourDialog.ShowDialog();
 
-      Color newColour = Color.FromArgb((int) opacityInput.Value, colourDialog.Color);
-      colourDialog.Color = newColour;
-      colourBox.BackColor = newColour;
-      colourBox.ForeColor = GetTextColourForBackground(newColour);
-      colourBox.Text = $"{colourDialog.Color.ToArgb() & 0x00FFFFFF:X6}";
+      colourInput.BackColor = colourDialog.Color;
+      colourInput.ForeColor = GetTextColourForBackground(colourDialog.Color);
+      colourInput.Text = $"{colourDialog.Color.ToArgb() & 0x00FFFFFF:X6}";
     }
 
-    private void OpacityInput_ValueChanged(object sender, EventArgs e) {
-      Color newColour = Color.FromArgb((int) opacityInput.Value, colourDialog.Color);
-      colourDialog.Color = newColour;
-      colourBox.BackColor = newColour;
-      colourBox.ForeColor = GetTextColourForBackground(newColour);
+    private void ColourInputBox_Click(object sender, EventArgs e) {
+      colourDialog.Color = colourInputBox.BackColor;
+      colourDialog.ShowDialog();
+
+      colourInputBox.BackColor = colourDialog.Color;
+      colourInputBox.ForeColor = GetTextColourForBackground(colourDialog.Color);
+      colourInputBox.Text = $"{colourDialog.Color.ToArgb() & 0x00FFFFFF:X6}";
     }
 
     // Taken from https://graphicdesign.stackexchange.com/a/77747
@@ -58,6 +64,7 @@ namespace TalosTextTool {
             throw new InjectionFailedException("Could not find game process to inject into!");
           }
 
+          // TODO: 64 bit version
           injection = new TextInjection32(manager);
         }
 
@@ -66,16 +73,26 @@ namespace TalosTextTool {
         }
 
         injection.Text = textInput.Text;
-        injection.TextColour = colourDialog.Color;
+        injection.TextColour = Color.FromArgb((int) opacityInput.Value, colourInput.BackColor);
 
-        Vector3<float> pos = new Vector3<float>();
-        pos.X = (float) xInput.Value;
-        pos.Y = (float) yInput.Value;
-        pos.Z = (float) zInput.Value;
-        injection.TextPos = pos;
-        
-        // TODO: Plug in the remaining paramaters
-        
+        injection.TextPos = new Vector3<float> {
+          X = (float) xInput.Value,
+          Y = (float) yInput.Value,
+          Z = (float) zInput.Value
+        };
+
+        injection.BoxColour = Color.FromArgb((int) opacityInputBox.Value, colourInputBox.BackColor);
+        injection.BoxPosMin = new Vector3<float> {
+          X = (float) xInputBox.Value,
+          Y = (float) yInputBox.Value,
+          Z = (float) zInputBox.Value
+        };
+        injection.BoxPosMax = new Vector3<float> {
+          X = (float) x2InputBox.Value,
+          Y = (float) y2InputBox.Value,
+          Z = (float) z2InputBox.Value
+        };
+
       } catch (InjectionFailedException ex) {
         MessageBox.Show(ex.Message, "Inject Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
       } catch (Win32Exception ex) {

@@ -12,12 +12,11 @@ namespace TalosTextTool {
     public InjectionFailedException(string message) : base(message) { }
   }
 
-  public interface ITextInjection {    
+  public interface ITextInjection {
     public void Inject();
 
     public bool IsHooked { get; }
     public bool IsInjected { get; }
-    public int MaxTextLength { get; }
 
     public Color TextColour { set; }
     public Vector3<float> TextPos { set; }
