@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using MemTools;
 
 namespace TalosTextTool {
   class AddressFinder {
@@ -15,7 +16,7 @@ namespace TalosTextTool {
     private const int DRAW_BOX_244 = 0x082FE20;
     private const int VIEWPORT_244 = 0x011E8A20;
 
-    public AddressFinder(MemoryManager manager) {
+    public AddressFinder(MemManager manager) {
       // TODO: Make this work with ore than just 244
       ProcessModule exe = manager.HookedProcess.MainModule;
       FoundAddresses = exe.ModuleMemorySize == 0x012b1000;
@@ -23,12 +24,10 @@ namespace TalosTextTool {
         return;
       }
 
-      ProcessModule main = manager.HookedProcess.MainModule;
-
-      CvarCheck = IntPtr.Add(main.BaseAddress, CVAR_CHECK_244);
-      DrawTextCall = IntPtr.Add(main.BaseAddress, DRAW_TEXT_CALL_244);
-      DrawBox = IntPtr.Add(main.BaseAddress, DRAW_BOX_244);
-      Viewport = IntPtr.Add(main.BaseAddress, VIEWPORT_244);
+      CvarCheck = IntPtr.Add(exe.BaseAddress, CVAR_CHECK_244);
+      DrawTextCall = IntPtr.Add(exe.BaseAddress, DRAW_TEXT_CALL_244);
+      DrawBox = IntPtr.Add(exe.BaseAddress, DRAW_BOX_244);
+      Viewport = IntPtr.Add(exe.BaseAddress, VIEWPORT_244);
     }
   }
 }

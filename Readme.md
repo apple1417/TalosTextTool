@@ -7,3 +7,6 @@ Currently only supports (Windows) version 244371.
 
 
 **Note:** this behaves exactly like (some) viruses so don't be surprised if your antivirus tries to stop you from running it, all the source code is available here if you really want to check what it does.
+
+
+Uses [MemTools](https://github.com/apple1417/MemTools).

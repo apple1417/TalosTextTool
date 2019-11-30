@@ -1,11 +1,12 @@
-﻿using System;
+﻿using MemTools;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 
 namespace TalosTextTool {
   class TextInjection32 : ITextInjection {
-    private readonly MemoryManager manager;
+    private readonly MemManager manager;
     private readonly AddressFinder addr;
     private IntPtr injectedAddr;
 
@@ -19,16 +20,16 @@ namespace TalosTextTool {
           return true;
         }
 
-        byte[] call = manager.Read(addr.DrawTextCall, 5);
-        if (call[0] == 0xE9) {
-          injectedAddr = IntPtr.Add(addr.DrawTextCall, BitConverter.ToInt32(call, 1) + 5);
+        // If we already read a jump call in the inject location
+        if (manager.Read(addr.DrawTextCall, 1)[0] == 0xE9) {
+          injectedAddr = manager.ReadOffset(IntPtr.Add(addr.DrawTextCall, 1));
           return true;
         }
         return false;
       }
     }
 
-    public TextInjection32(MemoryManager manager) {
+    public TextInjection32(MemManager manager) {
       this.manager = manager;
 
       addr = new AddressFinder(manager);
@@ -103,52 +104,49 @@ namespace TalosTextTool {
       manager.Write(injectedAddr, INJECTED_CODE);
 
       // Fill in the three which point to our own block of code
-      manager.Write(
+      manager.WriteInt32(
         IntPtr.Add(injectedAddr, TEXT_ADDR),
-        BitConverter.GetBytes(injectedAddr.ToInt32() + TEXT)
+        injectedAddr.ToInt32() + TEXT
       );
 
-      manager.Write(
+      manager.WriteInt32(
         IntPtr.Add(injectedAddr, TEXT_POS),
-        BitConverter.GetBytes(injectedAddr.ToInt32() + TEXT_X)
+        injectedAddr.ToInt32() + TEXT_X
       );
 
-      manager.Write(
+      manager.WriteInt32(
         IntPtr.Add(injectedAddr, BOX_POS),
-        BitConverter.GetBytes(injectedAddr.ToInt32() + BOX_X1)
+        injectedAddr.ToInt32() + BOX_X1
       );
 
       // Viewport pushes an address so it's absolute
-      manager.Write(
+      manager.WriteInt32(
         IntPtr.Add(injectedAddr, VIEWPORT),
-        BitConverter.GetBytes(addr.Viewport.ToInt32())
+        addr.Viewport.ToInt32()
       );
 
       // Deal with the jumps/calls, which use relative addresses
 
-      // Ignore the E8, read out the address
-      int originalDrawTextOffset = BitConverter.ToInt32(manager.Read(IntPtr.Add(addr.DrawTextCall, 1), 4), 0);
-      int actualDrawText = addr.DrawTextCall.ToInt32() + originalDrawTextOffset + 5;
-      int newDrawTextOffset = actualDrawText - (injectedAddr.ToInt32() + DRAW_TEXT + 4);
-      manager.Write(
+      manager.WriteOffset(
         IntPtr.Add(injectedAddr, DRAW_TEXT),
-        BitConverter.GetBytes(newDrawTextOffset)
+        // Ignore the E8, read out the address
+        manager.ReadOffset(IntPtr.Add(addr.DrawTextCall, 1))
       );
 
-      int drawBoxOffset = addr.DrawBox.ToInt32() - (injectedAddr.ToInt32() + DRAW_BOX + 4);
-      manager.Write(
+      manager.WriteOffset(
         IntPtr.Add(injectedAddr, DRAW_BOX),
-        BitConverter.GetBytes(drawBoxOffset)
+        addr.DrawBox
       );
 
-      int actualReturn = addr.DrawTextCall.ToInt32() + 5;
-      int returnOffset = actualReturn - (injectedAddr.ToInt32() + RETURN + 4);
-      manager.Write(
+      manager.WriteOffset(
         IntPtr.Add(injectedAddr, RETURN),
-        BitConverter.GetBytes(returnOffset)
+        // Return after the draw call
+        IntPtr.Add(addr.DrawTextCall, 5)
       );
 
       // Inject the jump into the main process
+      // We have to do this in one step - if we used two the game might take the jump/call between the steps and crash
+      // This means we have to manually work out the offset
       int jumpOffset = injectedAddr.ToInt32() - (addr.DrawTextCall.ToInt32() + 5);
       manager.Write(
         addr.DrawTextCall,
@@ -169,9 +167,9 @@ namespace TalosTextTool {
         if (!IsInjected) {
           throw new InjectionFailedException("Tried to edit field before injecting!");
         }
-        manager.Write(
+        manager.WriteInt32(
           IntPtr.Add(injectedAddr, TEXT_COLOUR),
-          BitConverter.GetBytes(value.ToArgb())
+          value.ToArgb()
         );
       }
     }
@@ -182,17 +180,17 @@ namespace TalosTextTool {
           throw new InjectionFailedException("Tried to edit field before injecting!");
         }
 
-        manager.Write(
+        manager.WriteFloat(
           IntPtr.Add(injectedAddr, TEXT_X),
-          BitConverter.GetBytes(value.X)
+          value.X
         );
-        manager.Write(
+        manager.WriteFloat(
           IntPtr.Add(injectedAddr, TEXT_Y),
-          BitConverter.GetBytes(value.Y)
+          value.Y
         );
-        manager.Write(
+        manager.WriteFloat(
           IntPtr.Add(injectedAddr, TEXT_Z),
-          BitConverter.GetBytes(value.Z)
+          value.Z
         );
       }
     }
@@ -205,9 +203,9 @@ namespace TalosTextTool {
         if (value.Length > MaxTextLength) {
           throw new InjectionFailedException("Provided string is too long!");
         }
-        manager.Write(
+        manager.WriteUtf8(
           IntPtr.Add(injectedAddr, TEXT),
-          Encoding.UTF8.GetBytes(value + "\x00")
+          value
         );
       }
     }
@@ -217,9 +215,9 @@ namespace TalosTextTool {
         if (!IsInjected) {
           throw new InjectionFailedException("Tried to edit field before injecting!");
         }
-        manager.Write(
+        manager.WriteInt32(
           IntPtr.Add(injectedAddr, BOX_COLOUR),
-          BitConverter.GetBytes(value.ToArgb())
+          value.ToArgb()
         );
       }
     }
@@ -230,17 +228,17 @@ namespace TalosTextTool {
           throw new InjectionFailedException("Tried to edit field before injecting!");
         }
 
-        manager.Write(
+        manager.WriteFloat(
           IntPtr.Add(injectedAddr, BOX_X1),
-          BitConverter.GetBytes(value.X)
+          value.X
         );
-        manager.Write(
+        manager.WriteFloat(
           IntPtr.Add(injectedAddr, BOX_Y1),
-          BitConverter.GetBytes(value.Y)
+          value.Y
         );
-        manager.Write(
+        manager.WriteFloat(
           IntPtr.Add(injectedAddr, BOX_Z1),
-          BitConverter.GetBytes(value.Z)
+          value.Z
         );
       }
     }
@@ -251,17 +249,17 @@ namespace TalosTextTool {
           throw new InjectionFailedException("Tried to edit field before injecting!");
         }
 
-        manager.Write(
+        manager.WriteFloat(
           IntPtr.Add(injectedAddr, BOX_X2),
-          BitConverter.GetBytes(value.X)
+          value.X
         );
-        manager.Write(
+        manager.WriteFloat(
           IntPtr.Add(injectedAddr, BOX_Y2),
-          BitConverter.GetBytes(value.Y)
+          value.Y
         );
-        manager.Write(
+        manager.WriteFloat(
           IntPtr.Add(injectedAddr, BOX_Z2),
-          BitConverter.GetBytes(value.Z)
+          value.Z
         );
       }
     }

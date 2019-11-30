@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MemTools;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -59,7 +60,7 @@ namespace TalosTextTool {
             throw new InjectionFailedException("Could not find game process to inject into!");
           }
 
-          MemoryManager manager = new MemoryManager(game);
+          MemManager manager = new MemManager(game);
           if (!manager.IsHooked) {
             throw new InjectionFailedException("Could not find game process to inject into!");
           }

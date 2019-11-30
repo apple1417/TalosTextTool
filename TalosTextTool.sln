@@ -5,7 +5,13 @@ VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalosTextTool", "TalosTextTool.csproj", "{5AD43F4B-9B2B-4268-997B-6806847B5B78}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MemTools", "..\MemTools\MemTools.shproj", "{F6AB04FF-EA6E-42D6-8004-26D9389429A4}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\MemTools\MemTools.projitems*{5ad43f4b-9b2b-4268-997b-6806847b5b78}*SharedItemsImports = 4
+		..\MemTools\MemTools.projitems*{f6ab04ff-ea6e-42d6-8004-26d9389429a4}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
