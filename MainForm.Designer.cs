@@ -69,6 +69,7 @@
       // textInput
       // 
       this.textInput.Location = new System.Drawing.Point(70, 160);
+      this.textInput.MaxLength = 256;
       this.textInput.Name = "textInput";
       this.textInput.Size = new System.Drawing.Size(120, 20);
       this.textInput.TabIndex = 0;

@@ -12,9 +12,6 @@ namespace TalosTextTool {
 
     public MainForm() {
       InitializeComponent();
-
-      // TODO: 64 bit, min of the two max lengths
-      textInput.MaxLength = TextInjection32.MaxTextLength;
     }
 
 
@@ -96,8 +93,11 @@ namespace TalosTextTool {
 
       } catch (InjectionFailedException ex) {
         MessageBox.Show(ex.Message, "Inject Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+// Let these bubble up while debugging
+#if !DEBUG
       } catch (Win32Exception ex) {
         MessageBox.Show($"A windows errors occured: {ex.Message}", "Inject Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+#endif
       }
     }
   }
