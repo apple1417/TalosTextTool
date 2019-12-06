@@ -50,10 +50,9 @@ namespace TalosTextTool {
               break;
             }
             case COLOUR: {
-              SplitColour(colourInput, opacityInput, Color.FromArgb(int.Parse(
-                child.Value,
-                NumberStyles.HexNumber
-              )));
+              SplitColour(colourInput, opacityInput, Color.FromArgb(
+                int.Parse(child.Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)
+              ));
               break;
             }
             case VALUE: {
@@ -80,10 +79,9 @@ namespace TalosTextTool {
               break;
             }
             case COLOUR: {
-              SplitColour(colourInputBox, opacityInputBox, Color.FromArgb(int.Parse(
-                child.Value,
-                NumberStyles.HexNumber
-              )));
+              SplitColour(colourInputBox, opacityInputBox, Color.FromArgb(
+                int.Parse(child.Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)
+              ));
               break;
             }
           }
@@ -102,19 +100,19 @@ namespace TalosTextTool {
       if (child == null) {
         throw new FormatException();
       }
-      output.X = float.Parse(child.Value);
+      output.X = float.Parse(child.Value, CultureInfo.InvariantCulture);
 
       child = pos.Elements(Y).FirstOrDefault();
       if (child == null) {
         throw new FormatException();
       }
-      output.Y = float.Parse(child.Value);
+      output.Y = float.Parse(child.Value, CultureInfo.InvariantCulture);
 
       child = pos.Elements(Z).FirstOrDefault();
       if (child == null) {
         throw new FormatException();
       }
-      output.Z = float.Parse(child.Value);
+      output.Z = float.Parse(child.Value, CultureInfo.InvariantCulture);
 
       return output;
     }
@@ -127,19 +125,19 @@ namespace TalosTextTool {
         writer.WriteStartDocument();
         writer.WriteStartElement(SETTINGS_HEADER);
 
-        writer.WriteElementString(AUTO_INJECT, autoInject.Checked.ToString());
+        writer.WriteElementString(AUTO_INJECT, autoInject.Checked.ToString(CultureInfo.InvariantCulture));
 
         writer.WriteStartElement(TEXT_HEADER);
 
         writer.WriteStartElement(POS);
-        writer.WriteElementString(X, xInput.Value.ToString());
-        writer.WriteElementString(Y, yInput.Value.ToString());
-        writer.WriteElementString(Z, zInput.Value.ToString());
+        writer.WriteElementString(X, xInput.Value.ToString(CultureInfo.InvariantCulture));
+        writer.WriteElementString(Y, yInput.Value.ToString(CultureInfo.InvariantCulture));
+        writer.WriteElementString(Z, zInput.Value.ToString(CultureInfo.InvariantCulture));
         writer.WriteEndElement();
 
         int textColour = colourInput.BackColor.ToArgb() & 0x00FFFFFF;
         textColour |= (int) opacityInput.Value << 24;
-        writer.WriteElementString(COLOUR, textColour.ToString("X8"));
+        writer.WriteElementString(COLOUR, textColour.ToString("X8", CultureInfo.InvariantCulture));
 
         writer.WriteElementString(VALUE, textInput.Text);
 
@@ -147,20 +145,20 @@ namespace TalosTextTool {
         writer.WriteStartElement(BOX_HEADER);
 
         writer.WriteStartElement(POS_MIN);
-        writer.WriteElementString(X, xInputBox.Value.ToString());
-        writer.WriteElementString(Y, yInputBox.Value.ToString());
-        writer.WriteElementString(Z, zInputBox.Value.ToString());
+        writer.WriteElementString(X, xInputBox.Value.ToString(CultureInfo.InvariantCulture));
+        writer.WriteElementString(Y, yInputBox.Value.ToString(CultureInfo.InvariantCulture));
+        writer.WriteElementString(Z, zInputBox.Value.ToString(CultureInfo.InvariantCulture));
         writer.WriteEndElement();
 
         writer.WriteStartElement(POS_MAX);
-        writer.WriteElementString(X, x2InputBox.Value.ToString());
-        writer.WriteElementString(Y, y2InputBox.Value.ToString());
-        writer.WriteElementString(Z, z2InputBox.Value.ToString());
+        writer.WriteElementString(X, x2InputBox.Value.ToString(CultureInfo.InvariantCulture));
+        writer.WriteElementString(Y, y2InputBox.Value.ToString(CultureInfo.InvariantCulture));
+        writer.WriteElementString(Z, z2InputBox.Value.ToString(CultureInfo.InvariantCulture));
         writer.WriteEndElement();
 
         int boxColour = colourInputBox.BackColor.ToArgb() & 0x00FFFFFF;
         boxColour |= (int) opacityInputBox.Value << 24;
-        writer.WriteElementString(COLOUR, boxColour.ToString("X8"));
+        writer.WriteElementString(COLOUR, boxColour.ToString("X8", CultureInfo.InvariantCulture));
 
         writer.WriteEndElement();
         writer.WriteEndElement();

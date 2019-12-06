@@ -46,7 +46,7 @@ namespace TalosTextTool {
         yInputBox.Value = (decimal) boxPosMin.Y;
         zInputBox.Value = (decimal) boxPosMin.Z;
 
-        Vector3<float> boxPosMax = injection.BoxPosMin;
+        Vector3<float> boxPosMax = injection.BoxPosMax;
         x2InputBox.Value = (decimal) boxPosMax.X;
         y2InputBox.Value = (decimal) boxPosMax.Y;
         z2InputBox.Value = (decimal) boxPosMax.Z;
@@ -96,7 +96,6 @@ namespace TalosTextTool {
 
     private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
       watcher.Dispose();
-      SaveSettings();
     }
 
     private void MainForm_KeyDown(object sender, KeyEventArgs e) {
@@ -163,6 +162,8 @@ namespace TalosTextTool {
           Y = (float) y2InputBox.Value,
           Z = (float) z2InputBox.Value
         };
+
+        SaveSettings();
 
       } catch (InjectionFailedException ex) {
         MessageBox.Show(ex.Message, "Inject Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
