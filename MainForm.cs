@@ -1,24 +1,108 @@
 ﻿using MemTools;
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Management;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace TalosTextTool {
   public partial class MainForm : Form {
     private ITextInjection injection = null;
+    private readonly ManagementEventWatcher watcher;
 
     public MainForm() {
       InitializeComponent();
+
+      watcher = new ManagementEventWatcher(new WqlEventQuery(
+        "SELECT * FROM __InstanceOperationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process'"
+      ));
+      watcher.EventArrived += new EventArrivedEventHandler(ProcessStart);
+      watcher.Start();
+
+      LoadSettings();
+
+      try {
+        HookGame();
+      } catch (InjectionFailedException) { }
+
+      // If we're already injected (tool was restarted, game wasn't) then overwrite the settings
+      //  with what's currently injected
+      if (injection != null && injection.IsInjected) {
+        textInput.Text = injection.Text;
+
+        SplitColour(colourInput, opacityInput, injection.TextColour);
+
+        Vector3<float> textPos = injection.TextPos;
+        xInput.Value = (decimal) textPos.X;
+        yInput.Value = (decimal) textPos.Y;
+        zInput.Value = (decimal) textPos.Z;
+
+        SplitColour(colourInputBox, opacityInputBox, injection.BoxColour);
+
+        Vector3<float> boxPosMin = injection.BoxPosMin;
+        xInputBox.Value = (decimal) boxPosMin.X;
+        yInputBox.Value = (decimal) boxPosMin.Y;
+        zInputBox.Value = (decimal) boxPosMin.Z;
+
+        Vector3<float> boxPosMax = injection.BoxPosMin;
+        x2InputBox.Value = (decimal) boxPosMax.X;
+        y2InputBox.Value = (decimal) boxPosMax.Y;
+        z2InputBox.Value = (decimal) boxPosMax.Z;
+      }
     }
 
+    public void ProcessStart(object sender, EventArrivedEventArgs e) {
+      if (!autoInject.Checked) {
+        return;
+      }
+      if (e.NewEvent.ClassPath.ClassName != "__InstanceCreationEvent") {
+        return;
+      }
+
+      string procName = (string) ((ManagementBaseObject) e.NewEvent.Properties["TargetInstance"].Value).Properties["Name"].Value;
+
+      if (procName == "Talos.exe") {
+        HookGame();
+        Thread.Sleep(15000);
+        InjectButton_Click(null, null);
+      }
+    }
+
+    private void HookGame() {
+      Process game = Process.GetProcessesByName("Talos").FirstOrDefault();
+      if (game == null) {
+        throw new InjectionFailedException("Could not find game process to inject into!");
+      }
+
+      MemManager manager = new MemManager(game);
+      if (!manager.IsHooked) {
+        throw new InjectionFailedException("Could not find game process to inject into!");
+      }
+
+      // TODO: 64 bit version
+      injection = new TextInjection32(manager);
+    }
+
+    private void SplitColour(Label display, NumericUpDown opacity, Color colour) {
+      opacity.Value = colour.A;
+
+      Color opaque = Color.FromArgb((int) (colour.ToArgb() | 0xFF000000));
+      display.BackColor = opaque;
+      display.ForeColor = GetTextColourForBackground(opaque);
+      display.Text = $"{colour.ToArgb() & 0x00FFFFFF:X6}";
+    }
+
+    private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
+      watcher.Dispose();
+      SaveSettings();
+    }
 
     private void MainForm_KeyDown(object sender, KeyEventArgs e) {
       if (e.KeyCode == Keys.Enter) {
         e.SuppressKeyPress = true;
-        InjectButton_Click(sender, e);
+        InjectButton_Click(null, null);
       }
     }
 
@@ -52,18 +136,7 @@ namespace TalosTextTool {
     private void InjectButton_Click(object sender, EventArgs e) {
       try {
         if (injection == null || !injection.IsHooked) {
-          Process game = Process.GetProcessesByName("Talos").FirstOrDefault();
-          if (game == null) {
-            throw new InjectionFailedException("Could not find game process to inject into!");
-          }
-
-          MemManager manager = new MemManager(game);
-          if (!manager.IsHooked) {
-            throw new InjectionFailedException("Could not find game process to inject into!");
-          }
-
-          // TODO: 64 bit version
-          injection = new TextInjection32(manager);
+          HookGame();
         }
 
         if (!injection.IsInjected) {
@@ -95,8 +168,8 @@ namespace TalosTextTool {
         MessageBox.Show(ex.Message, "Inject Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 // Let these bubble up while debugging
 #if !DEBUG
-      } catch (Win32Exception ex) {
-        MessageBox.Show($"A windows errors occured: {ex.Message}", "Inject Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      } catch (System.ComponentModel.Win32Exception ex) {
+        MessageBox.Show($"A windows error occured: {ex.Message}", "Inject Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 #endif
       }
     }

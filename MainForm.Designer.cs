@@ -23,6 +23,7 @@
     /// the contents of this method with the code editor.
     /// </summary>
     private void InitializeComponent() {
+      this.components = new System.ComponentModel.Container();
       System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
       this.textInput = new System.Windows.Forms.TextBox();
       this.colourDialog = new System.Windows.Forms.ColorDialog();
@@ -53,6 +54,8 @@
       this.y2InputBox = new System.Windows.Forms.NumericUpDown();
       this.titleText = new System.Windows.Forms.Label();
       this.titleBox = new System.Windows.Forms.Label();
+      this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+      this.autoInject = new System.Windows.Forms.ToolStripMenuItem();
       ((System.ComponentModel.ISupportInitialize)(this.xInput)).BeginInit();
       ((System.ComponentModel.ISupportInitialize)(this.yInput)).BeginInit();
       ((System.ComponentModel.ISupportInitialize)(this.zInput)).BeginInit();
@@ -64,6 +67,7 @@
       ((System.ComponentModel.ISupportInitialize)(this.xInputBox)).BeginInit();
       ((System.ComponentModel.ISupportInitialize)(this.z2InputBox)).BeginInit();
       ((System.ComponentModel.ISupportInitialize)(this.y2InputBox)).BeginInit();
+      this.contextMenuStrip.SuspendLayout();
       this.SuspendLayout();
       // 
       // textInput
@@ -249,7 +253,7 @@
       this.opacityInputBox.Hexadecimal = true;
       this.opacityInputBox.Location = new System.Drawing.Point(265, 135);
       this.opacityInputBox.Maximum = new decimal(new int[] {
-            176,
+            255,
             0,
             0,
             0});
@@ -461,11 +465,26 @@
       this.titleBox.TabIndex = 31;
       this.titleBox.Text = "Background";
       // 
+      // contextMenuStrip
+      // 
+      this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.autoInject});
+      this.contextMenuStrip.Name = "contextMenuStrip";
+      this.contextMenuStrip.Size = new System.Drawing.Size(181, 48);
+      // 
+      // autoInject
+      // 
+      this.autoInject.CheckOnClick = true;
+      this.autoInject.Name = "autoInject";
+      this.autoInject.Size = new System.Drawing.Size(180, 22);
+      this.autoInject.Text = "Auto Inject";
+      // 
       // MainForm
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.ClientSize = new System.Drawing.Size(395, 189);
+      this.ContextMenuStrip = this.contextMenuStrip;
       this.Controls.Add(this.titleBox);
       this.Controls.Add(this.titleText);
       this.Controls.Add(this.z2InputBox);
@@ -498,6 +517,7 @@
       this.KeyPreview = true;
       this.Name = "MainForm";
       this.Text = "Talos Text Tool";
+      this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
       this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainForm_KeyDown);
       ((System.ComponentModel.ISupportInitialize)(this.xInput)).EndInit();
       ((System.ComponentModel.ISupportInitialize)(this.yInput)).EndInit();
@@ -510,6 +530,7 @@
       ((System.ComponentModel.ISupportInitialize)(this.xInputBox)).EndInit();
       ((System.ComponentModel.ISupportInitialize)(this.z2InputBox)).EndInit();
       ((System.ComponentModel.ISupportInitialize)(this.y2InputBox)).EndInit();
+      this.contextMenuStrip.ResumeLayout(false);
       this.ResumeLayout(false);
       this.PerformLayout();
 
@@ -546,6 +567,8 @@
     private System.Windows.Forms.NumericUpDown y2InputBox;
     private System.Windows.Forms.Label titleText;
     private System.Windows.Forms.Label titleBox;
+    private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+    private System.Windows.Forms.ToolStripMenuItem autoInject;
   }
 }
 

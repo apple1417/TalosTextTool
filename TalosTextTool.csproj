@@ -58,6 +58,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -73,6 +74,9 @@
     <Compile Include="AddressList32.cs" />
     <Compile Include="IAddressList.cs" />
     <Compile Include="ITextInjection.cs" />
+    <Compile Include="MainFormSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="TextInjection32.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

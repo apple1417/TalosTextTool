@@ -200,19 +200,26 @@ namespace TalosTextTool {
     public Color TextColour {
       set {
         if (!IsInjected) {
-          throw new InjectionFailedException("Tried to edit field before injecting!");
+          throw new InjectionFailedException("Tried to access uninjected field!");
         }
         manager.WriteInt32(
           IntPtr.Add(injectedAddr, TEXT_COLOUR),
           value.ToArgb()
         );
       }
+      get {
+        if (!IsInjected) {
+          throw new InjectionFailedException("Tried to access uninjected field!");
+        }
+
+        return Color.FromArgb(manager.ReadInt32(IntPtr.Add(injectedAddr, TEXT_COLOUR)));
+      }
     }
 
     public Vector3<float> TextPos {
       set {
         if (!IsInjected) {
-          throw new InjectionFailedException("Tried to edit field before injecting!");
+          throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
         manager.WriteFloat(
@@ -228,12 +235,23 @@ namespace TalosTextTool {
           value.Z
         );
       }
+      get {
+        if (!IsInjected) {
+          throw new InjectionFailedException("Tried to access uninjected field!");
+        }
+
+        return new Vector3<float>() {
+          X = manager.ReadFloat(IntPtr.Add(injectedAddr, TEXT_X + addr.InjectInstructionLength)),
+          Y = manager.ReadFloat(IntPtr.Add(injectedAddr, TEXT_Y + addr.InjectInstructionLength)),
+          Z = manager.ReadFloat(IntPtr.Add(injectedAddr, TEXT_Z + addr.InjectInstructionLength)),
+        };
+      }
     }
 
     public string Text {
       set {
         if (!IsInjected) {
-          throw new InjectionFailedException("Tried to edit field before injecting!");
+          throw new InjectionFailedException("Tried to access uninjected field!");
         }
         if (value.Length > ALLOC_AMOUNT - (INJECTED_CODE_PRE.Length + INJECTED_CODE_POST.Length + addr.InjectInstructionLength) - 1) {
           throw new InjectionFailedException("Provided string is too long!");
@@ -243,24 +261,37 @@ namespace TalosTextTool {
           value
         );
       }
+      get {
+        if (!IsInjected) {
+          throw new InjectionFailedException("Tried to access uninjected field!");
+        }
+        return manager.ReadUtf8(IntPtr.Add(injectedAddr, TEXT + addr.InjectInstructionLength));
+      }
     }
 
     public Color BoxColour {
       set {
         if (!IsInjected) {
-          throw new InjectionFailedException("Tried to edit field before injecting!");
+          throw new InjectionFailedException("Tried to access uninjected field!");
         }
         manager.WriteInt32(
           IntPtr.Add(injectedAddr, BOX_COLOUR),
           value.ToArgb()
         );
       }
+      get {
+        if (!IsInjected) {
+          throw new InjectionFailedException("Tried to access uninjected field!");
+        }
+
+        return Color.FromArgb(manager.ReadInt32(IntPtr.Add(injectedAddr, BOX_COLOUR)));
+      }
     }
 
     public Vector3<float> BoxPosMin {
       set {
         if (!IsInjected) {
-          throw new InjectionFailedException("Tried to edit field before injecting!");
+          throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
         manager.WriteFloat(
@@ -276,12 +307,23 @@ namespace TalosTextTool {
           value.Z
         );
       }
+      get {
+        if (!IsInjected) {
+          throw new InjectionFailedException("Tried to access uninjected field!");
+        }
+
+        return new Vector3<float>() {
+          X = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_X1 + addr.InjectInstructionLength)),
+          Y = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_Y1 + addr.InjectInstructionLength)),
+          Z = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_Z1 + addr.InjectInstructionLength)),
+        };
+      }
     }
 
     public Vector3<float> BoxPosMax {
       set {
         if (!IsInjected) {
-          throw new InjectionFailedException("Tried to edit field before injecting!");
+          throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
         manager.WriteFloat(
@@ -296,6 +338,17 @@ namespace TalosTextTool {
           IntPtr.Add(injectedAddr, BOX_Z2 + addr.InjectInstructionLength),
           value.Z
         );
+      }
+      get {
+        if (!IsInjected) {
+          throw new InjectionFailedException("Tried to access uninjected field!");
+        }
+
+        return new Vector3<float>() {
+          X = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_X2 + addr.InjectInstructionLength)),
+          Y = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_Y2 + addr.InjectInstructionLength)),
+          Z = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_Z2 + addr.InjectInstructionLength)),
+        };
       }
     }
   }

@@ -18,12 +18,12 @@ namespace TalosTextTool {
     public bool IsHooked { get; }
     public bool IsInjected { get; }
 
-    public Color TextColour { set; }
-    public Vector3<float> TextPos { set; }
-    public string Text { set; }
+    public Color TextColour { get;  set; }
+    public Vector3<float> TextPos { get; set; }
+    public string Text { get; set; }
 
-    public Color BoxColour { set; }
-    public Vector3<float> BoxPosMin { set; }
-    public Vector3<float> BoxPosMax { set; }
+    public Color BoxColour { get; set; }
+    public Vector3<float> BoxPosMin { get; set; }
+    public Vector3<float> BoxPosMax { get; set; }
   }
 }
