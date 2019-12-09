@@ -63,10 +63,14 @@ namespace TalosTextTool {
 
       string procName = (string) ((ManagementBaseObject) e.NewEvent.Properties["TargetInstance"].Value).Properties["Name"].Value;
 
+      // TODO: Multiple possible process names
       if (procName == "Talos.exe") {
         HookGame();
         Thread.Sleep(15000);
-        InjectButton_Click(null, null);
+        // If the game didn't properly start then don't try inject (which creates an error message)
+        if (Process.GetProcessesByName("Talos").FirstOrDefault() != null) {
+          InjectButton_Click(null, null);
+        }
       }
     }
 
