@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Text;
 
 namespace TalosTextTool {
   class TextInjection32 : ITextInjection {
@@ -20,8 +21,8 @@ namespace TalosTextTool {
         }
 
         // If we already read a jump call in the inject location
-        if (manager.ReadByte(addr.InjectLocation) == 0xE9) {
-          injectedAddr = manager.ReadOffset(IntPtr.Add(addr.InjectLocation, 1));
+        if (manager.Read<Byte>(addr.InjectLocation) == 0xE9) {
+          injectedAddr = manager.ReadRelativePtr(IntPtr.Add(addr.InjectLocation, 1));
           return true;
         }
         return false;
@@ -69,7 +70,7 @@ namespace TalosTextTool {
     };
 
     private const int BOX_COLOUR =     0x1;
-    private const int BOX_POS =        0x6;
+    private const int BOX_POS_PUSH =   0x6;
     private const int BOX_VIEWPORT =   0xC;
     private const int DRAW_BOX =      0x11;
 
@@ -77,7 +78,7 @@ namespace TalosTextTool {
     private const int SET_FONT =      0x1B;
 
     private const int TEXT_COLOUR =   0x20;
-    private const int TEXT_POS =      0x25;
+    private const int TEXT_POS_PUSH = 0x25;
     private const int TEXT_ADDR =     0x2A;
     private const int TEXT_VIEWPORT = 0x30;
     private const int DRAW_TEXT =     0x35;
@@ -86,18 +87,9 @@ namespace TalosTextTool {
 
     private const int RETURN =        0x3D;
 
-    private const int TEXT_X =        0x41;
-    private const int TEXT_Y =        0x45;
-    private const int TEXT_Z =        0x49;
-
-    private const int BOX_X1 =        0x4D;
-    private const int BOX_Y1 =        0x51;
-    private const int BOX_Z1 =        0x55;
-
-    private const int BOX_X2 =        0x59;
-    private const int BOX_Y2 =        0x5D;
-    private const int BOX_Z2 =        0x61;
-
+    private const int TEXT_POS =      0x41;
+    private const int BOX_POS_MIN =   0x4D;
+    private const int BOX_POS_MAX =   0x59;
     private const int TEXT =          0x65;
 
     private const int ALLOC_AMOUNT =   512;
@@ -129,54 +121,54 @@ namespace TalosTextTool {
       );
 
       // Fill in the three which point to our own block of code
-      manager.WriteInt32(
+      manager.Write<Int32>(
         IntPtr.Add(injectedAddr, TEXT_ADDR),
         injectedAddr.ToInt32() + TEXT + addr.InjectInstructionLength
       );
 
-      manager.WriteInt32(
-        IntPtr.Add(injectedAddr, TEXT_POS),
-        injectedAddr.ToInt32() + TEXT_X + addr.InjectInstructionLength
+      manager.Write<Int32>(
+        IntPtr.Add(injectedAddr, TEXT_POS_PUSH),
+        injectedAddr.ToInt32() + TEXT_POS + addr.InjectInstructionLength
       );
 
-      manager.WriteInt32(
-        IntPtr.Add(injectedAddr, BOX_POS),
-        injectedAddr.ToInt32() + BOX_X1 + addr.InjectInstructionLength
+      manager.Write<Int32>(
+        IntPtr.Add(injectedAddr, BOX_POS_PUSH),
+        injectedAddr.ToInt32() + BOX_POS_MIN + addr.InjectInstructionLength
       );
 
       // Viewport and Font push addresses so they're absolute
-      manager.WritePtr(
+      manager.Write<IntPtr>(
         IntPtr.Add(injectedAddr, BOX_VIEWPORT),
         addr.Viewport
       );
-      manager.WritePtr(
+      manager.Write<IntPtr>(
         IntPtr.Add(injectedAddr, TEXT_VIEWPORT),
         addr.Viewport
       );
 
-      manager.WritePtr(
+      manager.Write<IntPtr>(
         IntPtr.Add(injectedAddr, FONT),
         addr.Font
       );
 
-      // Deal with the jumps/calls, which use relative addresses
+      // The jumps/calls use relative addresses
 
-      manager.WriteOffset(
+      manager.WriteRelativeAddress(
         IntPtr.Add(injectedAddr, DRAW_BOX),
         addr.DrawBox
       );
 
-      manager.WriteOffset(
+      manager.WriteRelativeAddress(
         IntPtr.Add(injectedAddr, SET_FONT),
         addr.SetFont
       );
 
-      manager.WriteOffset(
+      manager.WriteRelativeAddress(
         IntPtr.Add(injectedAddr, DRAW_TEXT),
         addr.DrawText
       );
 
-      manager.WriteOffset(
+      manager.WriteRelativeAddress(
         IntPtr.Add(injectedAddr, RETURN + addr.InjectInstructionLength),
         IntPtr.Add(addr.InjectLocation, addr.InjectInstructionLength)
       );
@@ -202,7 +194,7 @@ namespace TalosTextTool {
         if (!IsInjected) {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
-        manager.WriteInt32(
+        manager.Write<Int32>(
           IntPtr.Add(injectedAddr, TEXT_COLOUR),
           value.ToArgb()
         );
@@ -212,27 +204,19 @@ namespace TalosTextTool {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
-        return Color.FromArgb(manager.ReadInt32(IntPtr.Add(injectedAddr, TEXT_COLOUR)));
+        return Color.FromArgb(manager.Read<Int32>(IntPtr.Add(injectedAddr, TEXT_COLOUR)));
       }
     }
 
-    public Vector3<float> TextPos {
+    public Vector3F TextPos {
       set {
         if (!IsInjected) {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
-        manager.WriteFloat(
-          IntPtr.Add(injectedAddr, TEXT_X + addr.InjectInstructionLength),
-          value.X
-        );
-        manager.WriteFloat(
-          IntPtr.Add(injectedAddr, TEXT_Y + addr.InjectInstructionLength),
-          value.Y
-        );
-        manager.WriteFloat(
-          IntPtr.Add(injectedAddr, TEXT_Z + addr.InjectInstructionLength),
-          value.Z
+        manager.Write<Vector3F>(
+          IntPtr.Add(injectedAddr, TEXT_POS + addr.InjectInstructionLength),
+          value
         );
       }
       get {
@@ -240,11 +224,7 @@ namespace TalosTextTool {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
-        return new Vector3<float>() {
-          X = manager.ReadFloat(IntPtr.Add(injectedAddr, TEXT_X + addr.InjectInstructionLength)),
-          Y = manager.ReadFloat(IntPtr.Add(injectedAddr, TEXT_Y + addr.InjectInstructionLength)),
-          Z = manager.ReadFloat(IntPtr.Add(injectedAddr, TEXT_Z + addr.InjectInstructionLength)),
-        };
+        return manager.Read<Vector3F>(IntPtr.Add(injectedAddr, TEXT_POS + addr.InjectInstructionLength));
       }
     }
 
@@ -256,16 +236,17 @@ namespace TalosTextTool {
         if (value.Length > ALLOC_AMOUNT - (INJECTED_CODE_PRE.Length + INJECTED_CODE_POST.Length + addr.InjectInstructionLength) - 1) {
           throw new InjectionFailedException("Provided string is too long!");
         }
-        manager.WriteUtf8(
+        manager.WriteString(
           IntPtr.Add(injectedAddr, TEXT + addr.InjectInstructionLength),
-          value
+          value,
+          Encoding.UTF8
         );
       }
       get {
         if (!IsInjected) {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
-        return manager.ReadUtf8(IntPtr.Add(injectedAddr, TEXT + addr.InjectInstructionLength));
+        return manager.ReadString(IntPtr.Add(injectedAddr, TEXT + addr.InjectInstructionLength), Encoding.UTF8);
       }
     }
 
@@ -274,7 +255,7 @@ namespace TalosTextTool {
         if (!IsInjected) {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
-        manager.WriteInt32(
+        manager.Write<Int32>(
           IntPtr.Add(injectedAddr, BOX_COLOUR),
           value.ToArgb()
         );
@@ -284,27 +265,19 @@ namespace TalosTextTool {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
-        return Color.FromArgb(manager.ReadInt32(IntPtr.Add(injectedAddr, BOX_COLOUR)));
+        return Color.FromArgb(manager.Read<Int32>(IntPtr.Add(injectedAddr, BOX_COLOUR)));
       }
     }
 
-    public Vector3<float> BoxPosMin {
+    public Vector3F BoxPosMin {
       set {
         if (!IsInjected) {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
-        manager.WriteFloat(
-          IntPtr.Add(injectedAddr, BOX_X1 + addr.InjectInstructionLength),
-          value.X
-        );
-        manager.WriteFloat(
-          IntPtr.Add(injectedAddr, BOX_Y1 + addr.InjectInstructionLength),
-          value.Y
-        );
-        manager.WriteFloat(
-          IntPtr.Add(injectedAddr, BOX_Z1 + addr.InjectInstructionLength),
-          value.Z
+        manager.Write<Vector3F>(
+          IntPtr.Add(injectedAddr, BOX_POS_MIN + addr.InjectInstructionLength),
+          value
         );
       }
       get {
@@ -312,31 +285,19 @@ namespace TalosTextTool {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
-        return new Vector3<float>() {
-          X = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_X1 + addr.InjectInstructionLength)),
-          Y = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_Y1 + addr.InjectInstructionLength)),
-          Z = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_Z1 + addr.InjectInstructionLength)),
-        };
+        return manager.Read<Vector3F>(IntPtr.Add(injectedAddr, BOX_POS_MIN + addr.InjectInstructionLength));
       }
     }
 
-    public Vector3<float> BoxPosMax {
+    public Vector3F BoxPosMax {
       set {
         if (!IsInjected) {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
-        manager.WriteFloat(
-          IntPtr.Add(injectedAddr, BOX_X2 + addr.InjectInstructionLength),
-          value.X
-        );
-        manager.WriteFloat(
-          IntPtr.Add(injectedAddr, BOX_Y2 + addr.InjectInstructionLength),
-          value.Y
-        );
-        manager.WriteFloat(
-          IntPtr.Add(injectedAddr, BOX_Z2 + addr.InjectInstructionLength),
-          value.Z
+        manager.Write<Vector3F>(
+          IntPtr.Add(injectedAddr, BOX_POS_MAX + addr.InjectInstructionLength),
+          value
         );
       }
       get {
@@ -344,11 +305,7 @@ namespace TalosTextTool {
           throw new InjectionFailedException("Tried to access uninjected field!");
         }
 
-        return new Vector3<float>() {
-          X = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_X2 + addr.InjectInstructionLength)),
-          Y = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_Y2 + addr.InjectInstructionLength)),
-          Z = manager.ReadFloat(IntPtr.Add(injectedAddr, BOX_Z2 + addr.InjectInstructionLength)),
-        };
+        return manager.Read<Vector3F>(IntPtr.Add(injectedAddr, BOX_POS_MAX + addr.InjectInstructionLength));
       }
     }
   }

@@ -48,7 +48,7 @@ namespace TalosTextTool {
       if (tmp == IntPtr.Zero) {
         return;
       }
-      DrawText = manager.ReadOffset(tmp);
+      DrawText = manager.ReadRelativePtr(tmp);
 
       tmp = manager.SigScan(exe.BaseAddress, exe.ModuleMemorySize, 1,
         "E8 ????????",    // call Talos.exe + 82FE20
@@ -60,8 +60,8 @@ namespace TalosTextTool {
       if (tmp == IntPtr.Zero) {
         return;
       }
-      DrawBox = manager.ReadOffset(tmp);
-      Viewport = manager.ReadPtr(IntPtr.Add(tmp, 9));
+      DrawBox = manager.ReadRelativePtr(tmp);
+      Viewport = manager.Read<IntPtr>(IntPtr.Add(tmp, 9));
 
       FoundAddresses = true;
 
@@ -72,8 +72,8 @@ namespace TalosTextTool {
         "68 ????????",    // push Talos.exe + 11D6B60
         "E8 ????????"     // call Talos.exe + 81F230
       );
-      Font = manager.ReadPtr(tmp);
-      SetFont = manager.ReadOffset(IntPtr.Add(tmp, 5));
+      Font = manager.Read<IntPtr>(tmp);
+      SetFont = manager.ReadRelativePtr(IntPtr.Add(tmp, 5));
     }
   }
 }

@@ -43,7 +43,7 @@ namespace TalosTextTool {
         foreach (XElement child in text.Elements()) {
           switch (child.Name.ToString()) {
             case POS: {
-              Vector3<float> pos = ParseXMLPos(child);
+              Vector3F pos = ParseVector3F(child);
               xInput.Value = (decimal) pos.X;
               yInput.Value = (decimal) pos.Y;
               zInput.Value = (decimal) pos.Z;
@@ -65,14 +65,14 @@ namespace TalosTextTool {
         foreach (XElement child in box.Elements()) {
           switch (child.Name.ToString()) {
             case POS_MIN: {
-              Vector3<float> pos = ParseXMLPos(child);
+              Vector3F pos = ParseVector3F(child);
               xInputBox.Value = (decimal) pos.X;
               yInputBox.Value = (decimal) pos.Y;
               zInputBox.Value = (decimal) pos.Z;
               break;
             }
             case POS_MAX: {
-              Vector3<float> pos = ParseXMLPos(child);
+              Vector3F pos = ParseVector3F(child);
               x2InputBox.Value = (decimal) pos.X;
               y2InputBox.Value = (decimal) pos.Y;
               z2InputBox.Value = (decimal) pos.Z;
@@ -93,8 +93,8 @@ namespace TalosTextTool {
       } catch (XmlException) { }
     }
 
-    private Vector3<float> ParseXMLPos(XElement pos) {
-      Vector3<float> output = new Vector3<float>();
+    private Vector3F ParseVector3F(XElement pos) {
+      Vector3F output = new Vector3F();
 
       XElement child = pos.Elements(X).FirstOrDefault();
       if (child == null) {

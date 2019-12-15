@@ -34,19 +34,19 @@ namespace TalosTextTool {
 
         SplitColour(colourInput, opacityInput, injection.TextColour);
 
-        Vector3<float> textPos = injection.TextPos;
+        Vector3F textPos = injection.TextPos;
         xInput.Value = (decimal) textPos.X;
         yInput.Value = (decimal) textPos.Y;
         zInput.Value = (decimal) textPos.Z;
 
         SplitColour(colourInputBox, opacityInputBox, injection.BoxColour);
 
-        Vector3<float> boxPosMin = injection.BoxPosMin;
+        Vector3F boxPosMin = injection.BoxPosMin;
         xInputBox.Value = (decimal) boxPosMin.X;
         yInputBox.Value = (decimal) boxPosMin.Y;
         zInputBox.Value = (decimal) boxPosMin.Z;
 
-        Vector3<float> boxPosMax = injection.BoxPosMax;
+        Vector3F boxPosMax = injection.BoxPosMax;
         x2InputBox.Value = (decimal) boxPosMax.X;
         y2InputBox.Value = (decimal) boxPosMax.Y;
         z2InputBox.Value = (decimal) boxPosMax.Z;
@@ -149,19 +149,19 @@ namespace TalosTextTool {
         injection.Text = textInput.Text;
         injection.TextColour = Color.FromArgb((int) opacityInput.Value, colourInput.BackColor);
 
-        injection.TextPos = new Vector3<float> {
+        injection.TextPos = new Vector3F {
           X = (float) xInput.Value,
           Y = (float) yInput.Value,
           Z = (float) zInput.Value
         };
 
         injection.BoxColour = Color.FromArgb((int) opacityInputBox.Value, colourInputBox.BackColor);
-        injection.BoxPosMin = new Vector3<float> {
+        injection.BoxPosMin = new Vector3F {
           X = (float) xInputBox.Value,
           Y = (float) yInputBox.Value,
           Z = (float) zInputBox.Value
         };
-        injection.BoxPosMax = new Vector3<float> {
+        injection.BoxPosMax = new Vector3F {
           X = (float) x2InputBox.Value,
           Y = (float) y2InputBox.Value,
           Z = (float) z2InputBox.Value
