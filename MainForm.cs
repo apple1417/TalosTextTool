@@ -10,6 +10,8 @@ using System.Windows.Forms;
 namespace TalosTextTool {
   public partial class MainForm : Form {
     private ITextInjection injection = null;
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0069:Disposable fields should be disposed", Justification = "Is actually disposed in MainForm_FormClosing()")]
     private readonly ManagementEventWatcher watcher;
 
     public MainForm() {
@@ -50,6 +52,11 @@ namespace TalosTextTool {
         x2InputBox.Value = (decimal) boxPosMax.X;
         y2InputBox.Value = (decimal) boxPosMax.Y;
         z2InputBox.Value = (decimal) boxPosMax.Z;
+
+      // Inject if we're not already injected, but the game is running and autoinject is enabled
+      // This makes it so starting the tool after the game automatically injects
+      } else if (injection.IsHooked && autoInject.Checked) {
+        InjectButton_Click(null, null);
       }
     }
 
