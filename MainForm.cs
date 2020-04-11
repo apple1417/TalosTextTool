@@ -78,7 +78,7 @@ namespace TalosTextTool {
         // If the game didn't properly start then don't try inject (which creates an error message)
         Process talos = Process.GetProcessesByName("Talos").FirstOrDefault();
         Process moddable = Process.GetProcessesByName("Talos_Unrestricted").FirstOrDefault();
-        if (talos != null && moddable != null) {
+        if (talos != null || moddable != null) {
           InjectButton_Click(null, null);
         }
       }
