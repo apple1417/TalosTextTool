@@ -1,43 +1,12 @@
 ﻿using MemTools;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Text;
 
 namespace TalosTextTool {
-  class TextInjection32 : ITextInjection {
-    private readonly MemManager manager;
-    private readonly AddressList32 addr;
-    private IntPtr injectedAddr;
+  class TextInjection32 : ATextInjection {
+    public TextInjection32(MemManager manager, IAddressList addr) : base(manager, addr) { }
 
-    public bool IsHooked { get { return manager.IsHooked; } }
-    public bool IsInjected {
-      get {
-        if (!IsHooked) {
-          return false;
-        }
-        if (injectedAddr != IntPtr.Zero) {
-          return true;
-        }
-
-        // If we already read a jump call in the inject location
-        if (manager.Read<Byte>(addr.InjectLocation) == 0xE9) {
-          injectedAddr = manager.ReadRelativePtr(IntPtr.Add(addr.InjectLocation, 1));
-          return true;
-        }
-        return false;
-      }
-    }
-
-    public TextInjection32(MemManager manager) {
-      this.manager = manager;
-
-      addr = new AddressList32(manager);
-      if (!addr.FoundAddresses) {
-        throw new InjectionFailedException("Could not find locations to inject into! Most likely you are not running a compatible game version.");
-      }
-    }
-
+    // TODO: Jump over all this if viewport is null
     private static readonly byte[] INJECTED_CODE_PRE = new byte[] {
       0x68,         0x00, 0x00, 0x00, 0xB0, // push <box colour>
       0x68,         0xFF, 0xFF, 0xFF, 0xFF, // push <box pos>
@@ -50,7 +19,7 @@ namespace TalosTextTool {
       0x68,         0xFF, 0xFF, 0xFF, 0xFF, // push <text>
       0xFF, 0x35,   0xFF, 0xFF, 0xFF, 0xFF, // push [<viewport>]
       0xE8,         0xFF, 0xFF, 0xFF, 0xFF, // call <DrawText>
-      0x83, 0xC4, 0x20,                     // add esp,20
+      0x83, 0xC4, 0x20,                     // add esp, 20
     };                                      // <Copied overwritten instructions>
     private static readonly byte[] INJECTED_CODE_POST = new byte[] {
       0xE9,         0xFF, 0xFF, 0xFF, 0xFF, // jmp <return addr>
@@ -69,32 +38,33 @@ namespace TalosTextTool {
       0x00
     };
 
-    private const int BOX_COLOUR =     0x1;
-    private const int BOX_POS_PUSH =   0x6;
-    private const int BOX_VIEWPORT =   0xC;
-    private const int DRAW_BOX =      0x11;
+    protected override int INJECTED_CODE_LENGTH { get { return INJECTED_CODE_PRE.Length + INJECTED_CODE_POST.Length; } }
+    protected override int ALLOC_AMOUNT { get { return 0x200; } }
 
-    private const int FONT =          0x16;
-    private const int SET_FONT =      0x1B;
+    protected override int BOX_COLOUR   { get { return  0x1; } }
+    protected int BOX_POS_PUSH          { get { return  0x6; } }
+    protected int BOX_VIEWPORT          { get { return  0xC; } }
+    protected int DRAW_BOX              { get { return 0x11; } }
 
-    private const int TEXT_COLOUR =   0x20;
-    private const int TEXT_POS_PUSH = 0x25;
-    private const int TEXT_ADDR =     0x2A;
-    private const int TEXT_VIEWPORT = 0x30;
-    private const int DRAW_TEXT =     0x35;
+    protected int FONT                  { get { return 0x16; } }
+    protected int SET_FONT              { get { return 0x1B; } }
 
-    private const int COPIED_CODE =   0x3C;
+    protected override int TEXT_COLOUR  { get { return 0x20; } }
+    protected int TEXT_POS_PUSH         { get { return 0x25; } }
+    protected int TEXT_ADDR             { get { return 0x2A; } }
+    protected int TEXT_VIEWPORT         { get { return 0x30; } }
+    protected int DRAW_TEXT             { get { return 0x35; } }
 
-    private const int RETURN =        0x3D;
+    protected int COPIED_CODE           { get { return 0x3C; } }
 
-    private const int TEXT_POS =      0x41;
-    private const int BOX_POS_MIN =   0x4D;
-    private const int BOX_POS_MAX =   0x59;
-    private const int TEXT =          0x65;
+    protected int RETURN                { get { return 0x3D; } }
 
-    private const int ALLOC_AMOUNT =   512;
+    protected override int TEXT_POS     { get { return 0x41; } }
+    protected override int BOX_POS_MIN  { get { return 0x4D; } }
+    protected override int BOX_POS_MAX  { get { return 0x59; } }
+    protected override int TEXT         { get { return 0x65; } }
 
-    public void Inject() {
+    public override void Inject() {
       if (IsInjected) {
         return;
       }
@@ -153,24 +123,28 @@ namespace TalosTextTool {
 
       // The jumps/calls use relative addresses
 
-      manager.WriteRelativeAddress(
+      manager.WriteDisplacement(
         IntPtr.Add(injectedAddr, DRAW_BOX),
-        addr.DrawBox
+        addr.DrawBox,
+        false
       );
 
-      manager.WriteRelativeAddress(
+      manager.WriteDisplacement(
         IntPtr.Add(injectedAddr, SET_FONT),
-        addr.SetFont
+        addr.SetFont,
+        false
       );
 
-      manager.WriteRelativeAddress(
+      manager.WriteDisplacement(
         IntPtr.Add(injectedAddr, DRAW_TEXT),
-        addr.DrawText
+        addr.DrawText,
+        false
       );
 
-      manager.WriteRelativeAddress(
+      manager.WriteDisplacement(
         IntPtr.Add(injectedAddr, RETURN + addr.InjectInstructionLength),
-        IntPtr.Add(addr.InjectLocation, addr.InjectInstructionLength)
+        IntPtr.Add(addr.InjectLocation, addr.InjectInstructionLength),
+        false
       );
 
       // Inject the jump into the main process
@@ -187,126 +161,6 @@ namespace TalosTextTool {
         data.Add(0x90);
       }
       manager.Write(addr.InjectLocation, data.ToArray());
-    }
-
-    public Color TextColour {
-      set {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-        manager.Write<Int32>(
-          IntPtr.Add(injectedAddr, TEXT_COLOUR),
-          value.ToArgb()
-        );
-      }
-      get {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-
-        return Color.FromArgb(manager.Read<Int32>(IntPtr.Add(injectedAddr, TEXT_COLOUR)));
-      }
-    }
-
-    public Vector3F TextPos {
-      set {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-
-        manager.Write<Vector3F>(
-          IntPtr.Add(injectedAddr, TEXT_POS + addr.InjectInstructionLength),
-          value
-        );
-      }
-      get {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-
-        return manager.Read<Vector3F>(IntPtr.Add(injectedAddr, TEXT_POS + addr.InjectInstructionLength));
-      }
-    }
-
-    public string Text {
-      set {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-        if (value.Length > ALLOC_AMOUNT - (INJECTED_CODE_PRE.Length + INJECTED_CODE_POST.Length + addr.InjectInstructionLength) - 1) {
-          throw new InjectionFailedException("Provided string is too long!");
-        }
-        manager.WriteString(
-          IntPtr.Add(injectedAddr, TEXT + addr.InjectInstructionLength),
-          value,
-          Encoding.UTF8
-        );
-      }
-      get {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-        return manager.ReadString(IntPtr.Add(injectedAddr, TEXT + addr.InjectInstructionLength), Encoding.UTF8);
-      }
-    }
-
-    public Color BoxColour {
-      set {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-        manager.Write<Int32>(
-          IntPtr.Add(injectedAddr, BOX_COLOUR),
-          value.ToArgb()
-        );
-      }
-      get {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-
-        return Color.FromArgb(manager.Read<Int32>(IntPtr.Add(injectedAddr, BOX_COLOUR)));
-      }
-    }
-
-    public Vector3F BoxPosMin {
-      set {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-
-        manager.Write<Vector3F>(
-          IntPtr.Add(injectedAddr, BOX_POS_MIN + addr.InjectInstructionLength),
-          value
-        );
-      }
-      get {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-
-        return manager.Read<Vector3F>(IntPtr.Add(injectedAddr, BOX_POS_MIN + addr.InjectInstructionLength));
-      }
-    }
-
-    public Vector3F BoxPosMax {
-      set {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-
-        manager.Write<Vector3F>(
-          IntPtr.Add(injectedAddr, BOX_POS_MAX + addr.InjectInstructionLength),
-          value
-        );
-      }
-      get {
-        if (!IsInjected) {
-          throw new InjectionFailedException("Tried to access uninjected field!");
-        }
-
-        return manager.Read<Vector3F>(IntPtr.Add(injectedAddr, BOX_POS_MAX + addr.InjectInstructionLength));
-      }
     }
   }
 }

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using MemTools;
 
 namespace TalosTextTool {
-  class AddressList32 : IAddressList {
+  class AddressList_244_32 : IAddressList {
     public bool FoundAddresses { get; private set; }
 
     public IntPtr InjectLocation { get; private set; }
@@ -16,7 +16,7 @@ namespace TalosTextTool {
     public IntPtr Font { get; private set; }
     public IntPtr Viewport { get; private set; }
 
-    public AddressList32(MemManager manager) {
+    public AddressList_244_32(MemManager manager) {
       FoundAddresses = false;
       ProcessModule exe = manager.HookedProcess.MainModule;
 
@@ -48,7 +48,7 @@ namespace TalosTextTool {
       if (tmp == IntPtr.Zero) {
         return;
       }
-      DrawText = manager.ReadRelativePtr(tmp);
+      DrawText = manager.ReadDisplacement(tmp, false);
 
       tmp = manager.SigScan(exe.BaseAddress, exe.ModuleMemorySize, 1,
         "E8 ????????",    // call Talos.exe + 82FE20
@@ -60,10 +60,8 @@ namespace TalosTextTool {
       if (tmp == IntPtr.Zero) {
         return;
       }
-      DrawBox = manager.ReadRelativePtr(tmp);
+      DrawBox = manager.ReadDisplacement(tmp, false);
       Viewport = manager.Read<IntPtr>(IntPtr.Add(tmp, 9));
-
-      FoundAddresses = true;
 
       tmp = manager.SigScan(exe.BaseAddress, exe.ModuleMemorySize, 8,
         "83 C4 1C",       // add esp,1C
@@ -72,8 +70,13 @@ namespace TalosTextTool {
         "68 ????????",    // push Talos.exe + 11D6B60
         "E8 ????????"     // call Talos.exe + 81F230
       );
+      if (tmp == IntPtr.Zero) {
+        return;
+      }
       Font = manager.Read<IntPtr>(tmp);
-      SetFont = manager.ReadRelativePtr(IntPtr.Add(tmp, 5));
+      SetFont = manager.ReadDisplacement(IntPtr.Add(tmp, 5), false);
+
+      FoundAddresses = true;
     }
   }
 }

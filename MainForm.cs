@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace TalosTextTool {
   public partial class MainForm : Form {
-    private ITextInjection injection = null;
+    private ATextInjection injection = null;
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0069:Disposable fields should be disposed", Justification = "Is actually disposed in MainForm_FormClosing()")]
     private readonly ManagementEventWatcher watcher;
@@ -27,11 +27,13 @@ namespace TalosTextTool {
 
       try {
         HookGame();
-      } catch (InjectionFailedException) { }
+      } catch (InjectionFailedException) {
+        return;
+      }
 
       // If we're already injected (tool was restarted, game wasn't) then overwrite the settings
       //  with what's currently injected
-      if (injection != null && injection.IsInjected) {
+      if (injection.IsInjected) {
         textInput.Text = injection.Text;
 
         SplitColour(colourInput, opacityInput, injection.TextColour);
@@ -70,12 +72,13 @@ namespace TalosTextTool {
 
       string procName = (string) ((ManagementBaseObject) e.NewEvent.Properties["TargetInstance"].Value).Properties["Name"].Value;
 
-      // TODO: Multiple possible process names
-      if (procName == "Talos.exe") {
+      if (procName == "Talos.exe" || procName == "Talos_Unrestricted.exe") {
         HookGame();
         Thread.Sleep(15000);
         // If the game didn't properly start then don't try inject (which creates an error message)
-        if (Process.GetProcessesByName("Talos").FirstOrDefault() != null) {
+        Process talos = Process.GetProcessesByName("Talos").FirstOrDefault();
+        Process moddable = Process.GetProcessesByName("Talos_Unrestricted").FirstOrDefault();
+        if (talos != null && moddable != null) {
           InjectButton_Click(null, null);
         }
       }
@@ -84,7 +87,10 @@ namespace TalosTextTool {
     private void HookGame() {
       Process game = Process.GetProcessesByName("Talos").FirstOrDefault();
       if (game == null) {
-        throw new InjectionFailedException("Could not find game process to inject into!");
+        game = Process.GetProcessesByName("Talos_Unrestricted").FirstOrDefault();
+        if (game == null) {
+          throw new InjectionFailedException("Could not find game process to inject into!");
+        }
       }
 
       MemManager manager = new MemManager(game);
@@ -92,8 +98,12 @@ namespace TalosTextTool {
         throw new InjectionFailedException("Could not find game process to inject into!");
       }
 
-      // TODO: 64 bit version
-      injection = new TextInjection32(manager);
+      // TODO: Proper way of selecting addresses
+      if (manager.Is64Bit) {
+        injection = new TextInjection64(manager, new AddressList_440_64(manager));
+      } else {
+        injection = new TextInjection32(manager, new AddressList_244_32(manager));
+      }
     }
 
     private void SplitColour(Label display, NumericUpDown opacity, Color colour) {
